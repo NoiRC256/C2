@@ -1,0 +1,18 @@
+{
+    "name": "Logic.Mono",
+    "rootNamespace": "",
+    "references": [
+        "GUID:125c3aedcf93f9943a8eee73744a3780",
+        "GUID:7bbd5793d4564474988d26b4e600279c",
+        "GUID:fb5de0b054b847a48807b17ae6a882f6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
