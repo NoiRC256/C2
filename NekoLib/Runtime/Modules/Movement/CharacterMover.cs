@@ -193,7 +193,6 @@ namespace NekoLib.Movement
         // Input velocity that drives active velocity.
         private float _inputSpeed;
         private Vector3 _inputDirection;
-        private bool _hasInput;
         // Active velocity, driven by input and affected by velocity physics.
         private Vector3 _activeVel = Vector3.zero;
         // Previous nonzero active velocity direction.
@@ -338,7 +337,6 @@ namespace NekoLib.Movement
         {
             _inputSpeed = inputSpeed;
             _inputDirection = inputDirection;
-            if (inputSpeed > 0f && _inputDirection != Vector3.zero) _hasInput = true;
         }
 
         /// <summary>
@@ -473,7 +471,6 @@ namespace NekoLib.Movement
             if (_activeVel != Vector3.zero) _nonZeroActiveDirection = _activeVel.normalized;
             //_inputSpeed = 0f;
             //_inputDirection = Vector3.zero;
-            _hasInput = false;
             _hasOverrideVel = false;
         }
 

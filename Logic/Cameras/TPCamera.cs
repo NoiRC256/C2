@@ -95,7 +95,7 @@ namespace NekoNeko.Cameras
             }
         }
 
-        protected virtual void Update()
+        protected virtual void LateUpdate()
         {
             OnUpdate(Time.deltaTime);
         }

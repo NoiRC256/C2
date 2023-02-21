@@ -10,14 +10,18 @@ namespace NekoNeko.Avatar
 
         public InputAction Move { get; private set; }
         public InputAction Look { get; private set; }
-        public InputAction Attack { get; private set; }
+        public InputAction Fire { get; private set; }
+        public InputAction Sprint { get; private set; }
+        public InputAction Walk { get; private set; }
         public InputAction Interact { get; private set; }
 
-        private void Start()
+        private void Awake()
         {
             Move = _playerInput.actions[_config.Move];
             Look = _playerInput.actions[_config.Look];
-            Attack = _playerInput.actions[_config.Fire];
+            Fire = _playerInput.actions[_config.Fire];
+            Sprint = _playerInput.actions[_config.Sprint];
+            Walk = _playerInput.actions[_config.Walk];
             Interact = _playerInput.actions[_config.Interact];
         }
     }

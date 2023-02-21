@@ -3,19 +3,21 @@
 namespace NekoNeko
 {
     /// <summary>
-    /// Intercept and transfer animator root motion to specified transforms.
+    /// Relays animator root motion.
     /// </summary>
     public class MonoRootMotion : MonoBehaviour
     {
-        [SerializeField] private bool _interceptRootMotion = true;
+        [SerializeField] private bool _applyBuiltInRootMotion = false;
 
         private Animator _animator;
-        public bool InterceptRootMotion {
-            get => _interceptRootMotion;
-            set => _interceptRootMotion = value;
+
+        public bool ApplyBuiltinRootMotion {
+            get => _applyBuiltInRootMotion;
+            set => _applyBuiltInRootMotion = value;
         }
-        public Vector3 RootMotionDeltaPosition => _animator.deltaPosition;
-        public Quaternion RootMotionDeltaRotation => _animator.deltaRotation;
+        public Vector3 DeltaPosition => _animator.deltaPosition;
+        public Quaternion DeltaRotation => _animator.deltaRotation;
+        public Vector3 Velocity => _animator.velocity;
 
         private void OnValidate()
         {
@@ -29,17 +31,7 @@ namespace NekoNeko
 
         private void OnAnimatorMove()
         {
-            if (_animator.hasRootMotion)
-            {
-                _animator.ApplyBuiltinRootMotion();
-                Vector3 deltaPosition = _animator.deltaPosition;
-                Quaternion deltaRotation = _animator.deltaRotation;
-                if(_interceptRootMotion)
-                {
-                    transform.localPosition = Vector3.zero;
-                    transform.localRotation = Quaternion.identity;
-                }
-            }
+            if(_applyBuiltInRootMotion) _animator.ApplyBuiltinRootMotion();
         }
     }
 }

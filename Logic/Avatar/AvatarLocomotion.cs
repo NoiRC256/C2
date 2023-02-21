@@ -1,5 +1,6 @@
 using NekoLib.Movement;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace NekoNeko.Avatar
@@ -9,67 +10,78 @@ namespace NekoNeko.Avatar
         [SerializeField] private CharacterMover _mover;
         [SerializeField] private Transform _directionTr;
         [SerializeField] private Transform _dummyRoot;
+        [field: SerializeField] public MonoRootMotion RootMotion { get; private set; }
         [field: SerializeField] public float DefaultFacingSmoothDuration { get; set; } = 0.15f;
 
         public AvatarData Data { get; set; }
         public AvatarInput Input { get; set; }
-        public Vector3 LastInputDirection {
-            get => _lastInputDirection;
-            private set { if (value != Vector3.zero) _lastInputDirection = value; }
-        }
+        public FacingHandler FacingHandler { get; set; } = new FacingHandler();
 
-        private FacingHandler _facingHandler = new FacingHandler();
-        private Vector3 _lastInputDirection;
+        private LocomotionStateMachine _stateMachine;
 
         private void Awake()
         {
             if (_directionTr == null) _directionTr = this.transform;
-            LastInputDirection = transform.forward;
         }
+
+        private void Start()
+        {
+            Data.LastInputDirection = transform.forward;
+            _stateMachine = new LocomotionStateMachine(this);
+        }
+
+        #region Logic
 
         public void OnUpdate(float deltaTime)
         {
-            Vector2 moveInput = Input.Move.ReadValue<Vector2>();
-            float speed = Data.MovementConfig.RunSpeed * Data.MoveSpeedMultiplier.Value;
-            Move(speed, moveInput);
-
-            SetTargetFacing(LastInputDirection);
-            UpdateFacing(deltaTime);
-            SetFacing(_facingHandler.CurrentFacing);
+            Data.HasMoveInput = Input.Move.IsPressed();
+            _stateMachine.OnUpdate(deltaTime);
+            FacingHandler.OnUpdate(deltaTime);
+            SetFacing(FacingHandler.CurrentFacing);
         }
 
-        public void Move(float speed, Vector2 input)
+        public void Move(float speed, Vector3 direction)
+        {
+            _mover.InputMove(speed, direction);
+        }
+
+        public void InputMove(float speed, Vector3 direction)
+        {
+            Data.LastInputSpeed = speed;
+            Data.LastInputDirection = direction;
+            _mover.InputMove(speed, direction);
+        }
+
+        public void InputMove(float speed, Vector2 input)
         {
             Vector3 inputDirection = DirectionFromInput(input, _directionTr);
-            LastInputDirection = inputDirection;
-            _mover.InputMove(speed, inputDirection);
+            InputMove(speed, inputDirection);
         }
 
-        public void Move(float speed, Vector2 input, Transform directionTr)
+        public void InputMove(float speed, Vector2 input, Transform directionTr)
         {
             Vector3 inputDirection = DirectionFromInput(input, directionTr);
-            LastInputDirection = inputDirection;
-            _mover.InputMove(speed, inputDirection);
+            InputMove(speed, inputDirection);
         }
+
+        public void MoveDeltaPosition(Vector3 deltaPosition)
+        {
+            _mover.MoveDeltaPosition(deltaPosition);
+        }
+
+        public void MoveDeltaRotation(Quaternion deltaRotation)
+        {
+            Vector3 deltaEulerAngles = deltaRotation.eulerAngles;
+            deltaEulerAngles.x = deltaEulerAngles.z = 0f;
+            deltaRotation = Quaternion.Euler(deltaEulerAngles);
+            _dummyRoot.rotation *= deltaRotation;
+
+            FacingHandler.RefreshFacing(_dummyRoot.rotation);
+        }
+
+        #endregion
 
         #region Facing
-
-        public void SetTargetFacing(Vector3 direction) 
-            => _facingHandler.SetTargetFacing(direction);
-
-        private void UpdateFacing(float deltaTime)
-        {
-            _facingHandler.UpdateFacing(deltaTime, smoothDuration: DefaultFacingSmoothDuration);
-        }
-
-        public void UpdateFacing(float deltaTime, float smoothDuration) 
-            => _facingHandler.UpdateFacing(deltaTime, smoothDuration);
-
-        public void UpdateFacing(float deltaTime, Vector3 direction, float smoothDuration) 
-            => _facingHandler.UpdateFacing(deltaTime, direction, smoothDuration);
-
-        public void UpdateFacing(float deltaTime, float targetFacing, float smoothDuration)
-            => _facingHandler.UpdateFacing(deltaTime, targetFacing, smoothDuration);
 
         public void SetFacing(float facingAngle)
         {
