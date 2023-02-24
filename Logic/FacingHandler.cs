@@ -28,7 +28,7 @@ namespace NekoNeko
             _smoothDuration = DefaultSmoothDuration;
         }
 
-        public void FaceTowards(Vector3 direction, float smoothDuration)
+        public void RotateTowards(Vector3 direction, float smoothDuration)
         {
             RotateTowards(direction);
             _smoothDuration = smoothDuration;
