@@ -8,8 +8,8 @@ namespace NekoNeko.Avatar
     [CreateAssetMenu(menuName = "Avatar/Movement Config")]
     public class AvatarMovementConfig : ScriptableObject
     {
+        [field: SerializeField] public float WalkSpeed { get; private set; } = 1f;
         [field: SerializeField] public float RunSpeed { get; private set; } = 3f;
         [field: SerializeField] public float SprintSpeed { get; private set; } = 4.5f;
-        [field: SerializeField] public float CrouchMoveSpeed { get; private set; } = 4.5f;
     }
 }

@@ -2,11 +2,11 @@ using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
-    public class StateRun : AvatarStateBase
+    public class StateWalk : AvatarStateBase
     {
         protected Animancer.AnimancerState _state;
 
-        public StateRun(AvatarController avatar) : base(avatar)
+        public StateWalk(AvatarController avatar) : base(avatar)
         {
         }
 
@@ -23,8 +23,8 @@ namespace NekoNeko.Avatar
                 if (_data.ForwardFoot == 1f) _state.NormalizedTime += _locomotion.RunFootCycle.Duration;
             }
 
-            _locomotion.MovementMixer.State.Parameter = 1f;
-            _data.LocomotionState = AvatarData.LocomotionStateType.Run;
+            _locomotion.MovementMixer.State.Parameter = 0f;
+            _data.LocomotionState = AvatarData.LocomotionStateType.Walk;
         }
 
         public override void OnCheckTransitions()
@@ -37,41 +37,27 @@ namespace NekoNeko.Avatar
 
             if (_input.Sprint.IsPressed())
             {
+                _data.WalkToggle = false;
                 _stateMachine.TrySetState(_avatar.StateSprint);
                 return;
             }
 
-            if (_data.WalkToggle)
+            if (_input.Walk.WasPressedThisFrame())
             {
-                _stateMachine.TrySetState(_avatar.StateWalk);
+                _data.WalkToggle = false;
+                _stateMachine.TrySetState(_avatar.StateRun);
                 return;
             }
         }
 
         public override void OnUpdate(float deltaTime)
         {
-            _locomotion.InputMove(GetMoveSpeed(), _input.Move.ReadValue<Vector2>());
-            _locomotion.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
+            //float speedFactor = (_data.MovementConfig.WalkSpeed / _locomotion.WalkReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+            //_state.Speed = speedFactor;
+            //_locomotion.RootMotionInputMove(_locomotion.RootMotion.Velocity, _input.Move.ReadValue<Vector2>());
+            //_locomotion.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
 
-            float speedFactor = (GetMoveSpeed() / GetMoveReferenceSpeed()) * _data.MoveSpeedMultiplier.Value;
-            _state.Speed = speedFactor;
-
-            _data.ForwardFoot = _locomotion.EvaluateFootCycle(_state.NormalizedTime, GetFootCycleConfig());
-        }
-
-        protected virtual float GetMoveSpeed()
-        {
-            return _data.MovementConfig.RunSpeed;
-        }
-
-        protected virtual float GetMoveReferenceSpeed()
-        {
-            return _locomotion.RunReferenceSpeed;
-        }
-
-        protected virtual FootCycleConfig GetFootCycleConfig()
-        {
-            return _locomotion.RunFootCycle;
+            _locomotion.MoveDeltaPosition(_locomotion.RootMotion.DeltaPosition);
         }
     }
 }

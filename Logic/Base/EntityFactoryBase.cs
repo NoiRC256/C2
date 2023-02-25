@@ -2,6 +2,7 @@
 using NekoLib.Pool;
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEngine;
 #endif
 
 namespace NekoNeko
@@ -21,8 +22,8 @@ namespace NekoNeko
         }
 
 #if UNITY_EDITOR
-        [InitializeOnEnterPlayMode]
-        private static void InitializeOnEnterPlayMode()
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void DomainReload()
         {
             _objectPoolManager = null;
         }

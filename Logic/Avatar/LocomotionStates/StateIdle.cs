@@ -14,6 +14,8 @@ namespace NekoNeko.Avatar
             _data.ForwardFoot = 1f;
 
             _avatar.Animancer.Play(_locomotion.Idle);
+
+            _data.LocomotionState = AvatarData.LocomotionStateType.Idle;
         }
 
         public override void OnCheckTransitions()
@@ -21,6 +23,14 @@ namespace NekoNeko.Avatar
             if (_input.Move.IsPressed())
             {
                 _stateMachine.TrySetState(_avatar.StateIdleToMove);
+            }
+        }
+
+        public override void OnUpdate(float deltaTime)
+        {
+            if (_input.Walk.WasPressedThisFrame())
+            {
+                _data.WalkToggle = !_data.WalkToggle;
             }
         }
     }

@@ -15,22 +15,29 @@ namespace NekoNeko.Avatar
 
         [field: SerializeField] public MonoRootMotion RootMotion { get; private set; }
         [field: SerializeField] public float DefaultFacingSmoothDuration { get; set; } = 0.15f;
+        [field: SerializeField] public float IdleToMoveMinExitTime { get; private set; } = 0.25f;
 
         [field: Header("Animations")]
         [field: SerializeField] public ClipTransitionAsset.UnShared Idle { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared Walk { get; private set; }
-        [field: SerializeField] public FootCycleConfig WalkFootCycle { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared WalkStopL { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared WalkStopR { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared RunStartL { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared RunStartR { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared Run { get; private set; }
-        [field: SerializeField] public FootCycleConfig RunFootCycle { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared RunStopL { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared RunStopR { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared Sprint { get; private set; }
-        [field: SerializeField] public FootCycleConfig SprintFootCycle { get; private set; }
         [field: SerializeField] public ClipTransitionAsset.UnShared SprintStopR { get; private set; }
+        [field: SerializeField] public LinearMixerTransitionAsset.UnShared MovementMixer { get; private set; }
+
+        [field: Header("Animation Parameters")]
+        [field: SerializeField] public FootCycleConfig WalkFootCycle { get; private set; }
+        [field: SerializeField] public FootCycleConfig RunFootCycle { get; private set; }
+        [field: SerializeField] public FootCycleConfig SprintFootCycle { get; private set; }
+        [field: SerializeField] public float WalkReferenceSpeed { get; private set; } = 1.5f;
+        [field: SerializeField] public float RunReferenceSpeed { get; private set; } = 3f;
+        [field: SerializeField] public float SprintReferenceSpeed { get; private set; } = 5f;
 
         #endregion
 
@@ -104,15 +111,19 @@ namespace NekoNeko.Avatar
 
         public void RootMotionInputMove(Vector3 velocity, Vector2 input)
         {
-            if(input == Vector2.zero)
-            {
-                RootMotionInputMove(velocity.magnitude * Data.LastNonZeroInputDirection);
-                return;
-            } 
+            RootMotionInputMove(velocity.magnitude, input);
+        }
 
+        public void RootMotionInputMove(float speed, Vector2 input)
+        {
+            if (input == Vector2.zero)
+            {
+                RootMotionInputMove(speed * Data.LastNonZeroInputDirection);
+                return;
+            }
             Vector3 inputDirection = DirectionFromInput(input, _directionTr);
             Data.LastInputDirection = inputDirection;
-            RootMotionInputMove(velocity.magnitude * inputDirection);
+            RootMotionInputMove(speed * inputDirection);
         }
 
         public void MoveDeltaPosition(Vector3 deltaPosition, bool alignToGround = true, bool restrictToGround = false)

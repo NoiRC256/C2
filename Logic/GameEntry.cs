@@ -15,12 +15,15 @@ namespace NekoNeko
     public static class GameEntry
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        public static void Initialize()
+        private static void Initialize()
         {
             // Global object pool manager.
             NekoLib.GameEngine.Register<IObjectPoolManager, ObjectPoolManager>();
 
             Debug.Log("Game Entry Initialized");
+
+            var gameConfig = new GameConfig();
+            Debug.Log(gameConfig.frameRate);
         }
     }
 }

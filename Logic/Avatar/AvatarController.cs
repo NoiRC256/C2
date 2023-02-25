@@ -15,7 +15,9 @@ namespace NekoNeko.Avatar
         [field: SerializeField] public AvatarStateBase.StateMachine StateMachine { get; private set; }
         public AvatarStateBase StateIdle { get; private set; }
         public AvatarStateBase StateIdleToMove { get; private set; }
+        public AvatarStateBase StateWalk { get; private set; }
         public AvatarStateBase StateRun { get; private set; }
+        public AvatarStateBase StateSprint { get; private set; }
         public AvatarStateBase StateMoveToIdle { get; private set; }
 
 
@@ -32,7 +34,9 @@ namespace NekoNeko.Avatar
         {
             StateIdle = new StateIdle(this);
             StateIdleToMove = new StateIdleToMove(this);
+            StateWalk = new StateWalk(this);
             StateRun = new StateRun(this);
+            StateSprint = new StateSprint(this);
             StateMoveToIdle = new StateMoveToIdle(this);
             StateMachine.DefaultState = StateIdle;
         }
