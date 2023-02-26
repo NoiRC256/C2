@@ -1,5 +1,4 @@
 using Animancer.FSM;
-using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
@@ -9,10 +8,12 @@ namespace NekoNeko.Avatar
 
         protected AvatarStateBase.StateMachine _stateMachine;
         protected AvatarController _avatar;
+
         protected AvatarData _data;
         protected AvatarInput _input;
-        protected AvatarLocomotion _locomotion;
+        protected AvatarMovement _movement;
         protected AvatarAim _aim;
+        private AvatarController avatar;
 
         public AvatarStateBase(AvatarController avatar)
         {
@@ -20,7 +21,7 @@ namespace NekoNeko.Avatar
             _avatar = avatar;
             _data = avatar.Data;
             _input = avatar.Input;
-            _locomotion = avatar.Locomotion;
+            _movement = avatar.Movement;
             _aim = avatar.Aim;
         }
 

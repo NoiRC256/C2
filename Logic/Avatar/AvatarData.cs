@@ -5,7 +5,7 @@ namespace NekoNeko.Avatar
 {
     public class AvatarData : MonoBehaviour
     {
-        public enum LocomotionStateType
+        public enum MovementStateType
         {
             None,
             Idle,
@@ -27,9 +27,8 @@ namespace NekoNeko.Avatar
 
         #region State Properties
 
-        public LocomotionStateType LocomotionState { get; set; }
+        public MovementStateType MovementState { get; set; }
         public AimStateType AimState { get; set; }
-        public float ForwardFoot { get; set; }
         public Stat MoveSpeedMultiplier { get; private set; }
         public float LastMoveSpeed {
             get => _lastMoveSpeed;
@@ -42,6 +41,10 @@ namespace NekoNeko.Avatar
         public float LastNonZeroMoveSpeed { get; private set; }
         public float MoveDirectionDot { get; private set; }
         public Vector3 MoveDirectionCross { get; private set; }
+
+        public float ForwardFoot { get; set; }
+        public float LocomotionBlend { get; set; }
+        public float LocomotionTargetBlend { get; set; }
 
         #endregion
 

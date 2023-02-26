@@ -10,12 +10,12 @@ namespace NekoNeko.Avatar
 
         public override void OnEnterState()
         {
-            _locomotion.InputMove(0f, Vector3.zero);
+            _movement.InputMove(0f, Vector3.zero);
             _data.ForwardFoot = 1f;
 
-            _avatar.Animancer.Play(_locomotion.Idle);
+            _avatar.Animancer.Play(_movement.Idle);
 
-            _data.LocomotionState = AvatarData.LocomotionStateType.Idle;
+            _data.MovementState = AvatarData.MovementStateType.Idle;
         }
 
         public override void OnCheckTransitions()

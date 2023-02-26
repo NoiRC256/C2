@@ -20,13 +20,15 @@ namespace NekoNeko.Avatar
                 return;
             }
 
-            _locomotion.RunStartL.Events.OnEnd = End;
-            _locomotion.RunStartR.Events.OnEnd = End;
+            _movement.RunStartL.Events.OnEnd = End;
+            _movement.RunStartR.Events.OnEnd = End;
 
-            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_locomotion.RunStartL);
-            else _state = _avatar.Animancer.Play(_locomotion.RunStartR);
+            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_movement.RunStartL);
+            else _state = _avatar.Animancer.Play(_movement.RunStartR);
 
             _counter = 0f;
+
+            _data.MovementState = AvatarData.MovementStateType.Run;
         }
 
         public override void OnCheckTransitions()
@@ -35,12 +37,12 @@ namespace NekoNeko.Avatar
 
             if (_input.Walk.WasPressedThisFrame())
             {
-                _data.WalkToggle = !_data.WalkToggle;
+                _data.WalkToggle = true;
                 _stateMachine.TrySetState(_avatar.StateWalk);
                 return;
             }
 
-            if (!_input.Move.IsPressed() && _counter >= _locomotion.IdleToMoveMinExitTime)
+            if (!_input.Move.IsPressed() && _counter >= _movement.IdleToMoveMinExitTime)
             {
                 _stateMachine.TrySetState(_avatar.StateMoveToIdle);
                 return;
@@ -49,10 +51,10 @@ namespace NekoNeko.Avatar
 
         public override void OnUpdate(float deltaTime)
         {
-            float speedFactor = (_data.MovementConfig.RunSpeed / _locomotion.RunReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+            float speedFactor = (_data.MovementConfig.RunSpeed / _movement.RunReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
             _state.Speed = speedFactor;
-            _locomotion.RootMotionInputMove(_locomotion.RootMotion.Velocity, _input.Move.ReadValue<Vector2>());
-            _locomotion.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
+            _movement.RootMotionInputMove(_movement.RootMotion.Velocity, _input.Move.ReadValue<Vector2>());
+            _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
         }
 
         private void End()

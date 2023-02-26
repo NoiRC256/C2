@@ -49,7 +49,7 @@ namespace NekoNeko.Avatar
         public void OnUpdate(float deltaTime)
         {
             if (_animator == null) return;
-            EvaluateLocomotionState(Data.LocomotionState, deltaTime);
+            EvaluateLocomotionState(Data.MovementState, deltaTime);
             _animator.SetBool(HasMoveInput, Data.HasMovementInput);
             _animator.SetFloat(MoveSpeed, Data.LastNonZeroMoveSpeed);
             _animator.SetFloat(InputSpeed, Data.LastNonZeroInputSpeed);
@@ -59,16 +59,16 @@ namespace NekoNeko.Avatar
 
         #region State
 
-        private void EvaluateLocomotionState(AvatarData.LocomotionStateType state, float deltaTime)
+        private void EvaluateLocomotionState(AvatarData.MovementStateType state, float deltaTime)
         {
             ClearStateParams();
             switch (state)
             {
-                case AvatarData.LocomotionStateType.Idle:
+                case AvatarData.MovementStateType.Idle:
                     _animator.SetBool(IsIdle, true);
                     _animator.SetFloat(SmoothedMoveBlend, _smoothedMoveBlend);
                     break;
-                case AvatarData.LocomotionStateType.Run:
+                case AvatarData.MovementStateType.Run:
                     _animator.SetBool(IsMoving, true);
                     _animator.SetBool(IsRunning, true);
 
@@ -77,7 +77,7 @@ namespace NekoNeko.Avatar
                     _animator.SetFloat(SmoothedMoveBlend, _smoothedMoveBlend);
                     EvaluateFootPosition();
                     break;
-                case AvatarData.LocomotionStateType.Sprint:
+                case AvatarData.MovementStateType.Sprint:
                     _animator.SetBool(IsMoving, true);
                     _animator.SetBool(IsSprinting, true);
 
@@ -86,7 +86,7 @@ namespace NekoNeko.Avatar
                     _animator.SetFloat(SmoothedMoveBlend, _smoothedMoveBlend);
                     EvaluateFootPosition();
                     break;
-                case AvatarData.LocomotionStateType.Walk:
+                case AvatarData.MovementStateType.Walk:
                     _animator.SetBool(IsMoving, true);
                     _animator.SetBool(IsWalking, true);
                     _animator.SetBool(UseRootMotion, true);
@@ -96,7 +96,7 @@ namespace NekoNeko.Avatar
                     _animator.SetFloat(SmoothedMoveBlend, _smoothedMoveBlend);
                     EvaluateFootPosition();
                     break;
-                case AvatarData.LocomotionStateType.RootMotion:
+                case AvatarData.MovementStateType.RootMotion:
                     _animator.SetBool(IsMoving, true);
                     break;
             }

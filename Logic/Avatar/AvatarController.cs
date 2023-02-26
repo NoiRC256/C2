@@ -9,10 +9,14 @@ namespace NekoNeko.Avatar
         [field: SerializeField] public AvatarInput Input { get; private set; }
         [field: SerializeField] public AnimancerComponent Animancer { get; private set; }
 
-        [field: SerializeField] public AvatarLocomotion Locomotion { get; private set; }
+        [field: SerializeField] public AvatarMovement Movement { get; private set; }
         [field: SerializeField] public AvatarAim Aim { get; private set; }
 
         [field: SerializeField] public AvatarStateBase.StateMachine StateMachine { get; private set; }
+        [field: SerializeField] public LocomotionStateConfig StateWalkConfig { get; private set; }
+        [field: SerializeField] public LocomotionStateConfig StateRunConfig { get; private set; }
+        [field: SerializeField] public LocomotionStateConfig StateSprintConfig { get; private set; }
+
         public AvatarStateBase StateIdle { get; private set; }
         public AvatarStateBase StateIdleToMove { get; private set; }
         public AvatarStateBase StateWalk { get; private set; }
@@ -23,8 +27,8 @@ namespace NekoNeko.Avatar
 
         private void Awake()
         {
-            Locomotion.Data = Data;
-            Locomotion.Input = Input;
+            Movement.Data = Data;
+            Movement.Input = Input;
             Aim.Data = Data;
             Aim.Input = Input;
             StateMachine = new AvatarStateBase.StateMachine();
@@ -34,9 +38,9 @@ namespace NekoNeko.Avatar
         {
             StateIdle = new StateIdle(this);
             StateIdleToMove = new StateIdleToMove(this);
-            StateWalk = new StateWalk(this);
-            StateRun = new StateRun(this);
-            StateSprint = new StateSprint(this);
+            StateWalk = new StateWalk(this, StateWalkConfig);
+            StateRun = new StateRun(this, StateRunConfig);
+            StateSprint = new StateSprint(this, StateSprintConfig);
             StateMoveToIdle = new StateMoveToIdle(this);
             StateMachine.DefaultState = StateIdle;
         }
@@ -46,7 +50,7 @@ namespace NekoNeko.Avatar
             float deltaTime = Time.deltaTime;
             StateMachine.CurrentState.OnCheckTransitions();
             StateMachine.CurrentState.OnUpdate(Time.deltaTime);
-            Locomotion.OnUpdate(deltaTime);
+            Movement.OnUpdate(deltaTime);
             Aim.OnUpdate(deltaTime);
         }
     }

@@ -203,13 +203,11 @@ namespace NekoLib.Movement
 
         #region Active Velocity Cache
 
-        // Input velocity that drives active velocity.
-        private float _inputSpeed;
-        private Vector3 _inputDirection;
+        private Vector3 _activeVelocityTarget = Vector3.zero;
         // Active velocity, driven by input and affected by velocity physics.
-        private Vector3 _activeVel = Vector3.zero;
+        private Vector3 _activeVelocity = Vector3.zero;
         // Previous nonzero active velocity direction.
-        private Vector3 _nonZeroActiveDirection = Vector3.zero;
+        private Vector3 _lastNonZeroActiveDirection = Vector3.zero;
 
         #endregion
 
@@ -394,8 +392,12 @@ namespace NekoLib.Movement
         /// <param name="inputDirection"></param>
         public void InputMove(float inputSpeed, Vector3 inputDirection)
         {
-            _inputSpeed = inputSpeed;
-            _inputDirection = inputDirection;
+            InputMove(inputSpeed * inputDirection);
+        }
+
+        public void InputMove(Vector3 velocity)
+        {
+            _activeVelocityTarget = velocity;
         }
 
         /// <summary>
@@ -404,12 +406,13 @@ namespace NekoLib.Movement
         /// <param name="velocity"></param>
         public void SetActiveVelocity(Vector3 velocity)
         {
-            _activeVel = velocity;
+            _activeVelocity = velocity;
+            _activeVelocityTarget = velocity;
         }
 
         public void ClearActiveVelocity()
         {
-            _activeVel = Vector3.zero;
+            _activeVelocity = Vector3.zero;
         }
 
         #endregion
@@ -533,7 +536,7 @@ namespace NekoLib.Movement
                 // limit this impulse speed so the final result not exceed its max speed when combined with the active velocity.
                 if (impulse.SpeedModeFlag == Impulse.SpeedMode.Max)
                 {
-                    thisImpulseVel = Vector3.ClampMagnitude(thisImpulseVel, impulse.MaxSpeed - _activeVel.magnitude);
+                    thisImpulseVel = Vector3.ClampMagnitude(thisImpulseVel, impulse.MaxSpeed - _activeVelocity.magnitude);
                 }
                 // If flagged as align to ground.
                 if (impulse.AlignToGroundFlag == true)
@@ -589,16 +592,14 @@ namespace NekoLib.Movement
             Move(finalVel);
 
             // Clean up.
-            if (_activeVel != Vector3.zero) _nonZeroActiveDirection = _activeVel.normalized;
-            //_inputSpeed = 0f;
-            //_inputDirection = Vector3.zero;
+            if (_activeVelocity != Vector3.zero) _lastNonZeroActiveDirection = _activeVelocity.normalized;
             _hasOverrideVel = false;
         }
 
         private Vector3 CalculateFinalVel(float deltaTime)
         {
             // Refresh active velocity. Apply velocity physics.
-            _activeVel = UpdateVelocityPhysics(_activeVel, _inputSpeed, _inputDirection, deltaTime);
+            _activeVelocity = UpdateVelocityPhysics(_activeVelocity, _activeVelocityTarget, deltaTime);
 
             // Refresh impulses.
             Vector3 impulseVelocity = RefreshImpulses(deltaTime);
@@ -623,7 +624,7 @@ namespace NekoLib.Movement
                 UpdateVelocitySources(out sourceVelocity, out sourceVelocityAlignToGround);
 
                 // Rotate velocity to align to ground.
-                if (IsOnGround) groundAlignedVelocity = AlignVelocityToNormal(_activeVel + sourceVelocityAlignToGround, SlopeNormal);
+                if (IsOnGround) groundAlignedVelocity = AlignVelocityToNormal(_activeVelocity + sourceVelocityAlignToGround, SlopeNormal);
 
                 finalVelocity = groundAlignedVelocity + sourceVelocity + _passiveVel + _extraVel + impulseVelocity;
             }
@@ -640,22 +641,23 @@ namespace NekoLib.Movement
             return finalVelocity;
         }
 
-        private Vector3 UpdateVelocityPhysics(Vector3 activeVel, float inputSpeed, Vector3 inputDirection, float deltaTime)
+        private Vector3 UpdateVelocityPhysics(Vector3 currentVelocity, Vector3 targetVelocity, float deltaTime)
         {
             // Add any velocity from input, apply velocity physics to existing active velocity.
-            bool noActiveVel = activeVel == Vector3.zero && (inputSpeed == 0f || inputDirection == Vector3.zero);
-            if (!noActiveVel)
+
+            bool isNotActive = (currentVelocity == Vector3.zero) && (targetVelocity == Vector3.zero);
+            if (!isNotActive)
             {
                 switch (_velocityMode)
                 {
                     case VelocityPhysicsMode.None:
-                        activeVel = inputSpeed * inputDirection;
+                        currentVelocity = targetVelocity;
                         break;
                     case VelocityPhysicsMode.Simple:
-                        activeVel = CalculatePhysicalVelocitySimple(activeVel, inputSpeed * inputDirection, _speedChange);
+                        currentVelocity = CalculatePhysicalVelocitySimple(currentVelocity, targetVelocity, _speedChange);
                         break;
                     case VelocityPhysicsMode.Advanced:
-                        activeVel = CalculatePhysicalVelocity(activeVel, inputSpeed, inputDirection,
+                        currentVelocity = CalculatePhysicalVelocity(currentVelocity, targetVelocity,
                             deltaTime,
                             accel: _velocityConfig.Accel,
                             decel: _velocityConfig.Decel, brakingDecel: _velocityConfig.BrakingDecel,
@@ -663,7 +665,7 @@ namespace NekoLib.Movement
                         break;
                 }
             }
-            return activeVel;
+            return currentVelocity;
         }
 
         /// <summary>
@@ -679,11 +681,11 @@ namespace NekoLib.Movement
             {
 
                 foundSlope = (_slopeProbeFrontCount == 1 && _slopeProbeBackCount == 1) ?
-                    ProbeSlope(out slopeNormal, basePoint: GroundPoint, offsetDirection: _nonZeroActiveDirection,
+                    ProbeSlope(out slopeNormal, basePoint: GroundPoint, offsetDirection: _lastNonZeroActiveDirection,
                         originY: ColliderCenter.y + _capsuleHalfHeight, range: GroundSensor.GroundThresholdDistance + _capsuleHalfHeight,
                         _slopeProbeFrontOffset, _slopeProbeBackOffset)
                     :
-                    ProbeSlopeArray(out slopeNormal, basePoint: GroundPoint, offsetDirection: _nonZeroActiveDirection,
+                    ProbeSlopeArray(out slopeNormal, basePoint: GroundPoint, offsetDirection: _lastNonZeroActiveDirection,
                         originY: ColliderCenter.y + _capsuleHalfHeight, range: GroundSensor.GroundThresholdDistance + _capsuleHalfHeight,
                         _slopeProbeFrontOffset, _slopeProbeFrontCount, _slopeProbeBackOffset, _slopeProbeBackCount);
             }
@@ -1084,45 +1086,45 @@ namespace NekoLib.Movement
 
         #region Velocity Physics
 
-        private Vector3 CalculatePhysicalVelocitySimple(Vector3 currentVel, Vector3 desiredVel, float accel = kMaxSpeedChange)
+        private Vector3 CalculatePhysicalVelocitySimple(Vector3 currentVelocity, Vector3 targetVelocity, float accel = kMaxSpeedChange)
         {
-            Vector3 finalVel = currentVel;
+            Vector3 finalVel = currentVelocity;
             float speedChange = accel * Time.deltaTime;
 
-            finalVel = Vector3.MoveTowards(finalVel, desiredVel, speedChange);
+            finalVel = Vector3.MoveTowards(finalVel, targetVelocity, speedChange);
 
             return finalVel;
         }
 
-        private Vector3 CalculatePhysicalVelocity(Vector3 currentVel, float desiredSpeed, Vector3 desiredDirection,
+        private Vector3 CalculatePhysicalVelocity(Vector3 currentVelocity, Vector3 targetVelocity,
             float deltaTime,
             float accel = VelocityConfig.kMaxAccel,
             float decel = VelocityConfig.kMaxDecel, float brakingDecel = VelocityConfig.kMaxDecel,
             float friction = VelocityConfig.kMaxFriction, float brakingFriction = VelocityConfig.kMaxFriction)
         {
-            float currentSpeedSqr = currentVel.sqrMagnitude;
-            float desiredSpeedSqr = desiredSpeed * desiredSpeed;
-            Vector3 currentDirection = currentVel.normalized;
-            Vector3 desiredVel = desiredSpeed * desiredDirection;
-            //Debug.Log(currentSpeedSqr + " > " + desiredSpeedSqr + " : " + (currentSpeedSqr > (desiredSpeedSqr * 1.01f)));
+            float currentSpeedSqr = currentVelocity.sqrMagnitude;
+            float targetSpeedSqr = targetVelocity.sqrMagnitude;
+            float targetSpeed = targetVelocity.magnitude;
+            Vector3 currentDirection = currentVelocity.normalized;
+            Vector3 targetDirection = targetVelocity.normalized;
 
-            if (currentSpeedSqr > desiredSpeedSqr * 1.01f)
+            if (currentSpeedSqr > targetSpeedSqr * 1.01f)
             {
-                if (desiredSpeed > 0f && desiredDirection != Vector3.zero)
+                if (targetSpeedSqr > 0f && targetDirection != Vector3.zero)
                 {
-                    currentVel = ApplyDeceleration(currentVel, currentDirection, desiredSpeed, desiredSpeedSqr, decel, deltaTime);
+                    currentVelocity = ApplyDeceleration(currentVelocity, currentDirection, targetSpeed, decel, deltaTime);
                 }
-                else currentVel = ApplyVelocityBraking(currentVel, currentDirection, brakingFriction, brakingDecel, deltaTime);
+                else currentVelocity = ApplyVelocityBraking(currentVelocity, currentDirection, brakingFriction, brakingDecel, deltaTime);
             }
             else
             {
-                float currentSpeed = currentVel.magnitude;
-                currentVel = ApplyFriction(currentVel, currentSpeed, desiredDirection, friction, deltaTime);
+                float currentSpeed = currentVelocity.magnitude;
+                currentVelocity = ApplyFriction(currentVelocity, currentSpeed, targetDirection, friction, deltaTime);
                 ;
-                if (currentSpeed < desiredSpeed)
+                if (currentSpeed < targetSpeed)
                 {
-                    currentVel += deltaTime * accel * desiredDirection;
-                    currentVel = Vector3.ClampMagnitude(currentVel, desiredSpeed);
+                    currentVelocity += deltaTime * accel * targetDirection;
+                    currentVelocity = Vector3.ClampMagnitude(currentVelocity, targetSpeed);
                 }
             }
 
@@ -1130,60 +1132,62 @@ namespace NekoLib.Movement
             if (_showVelocityDebug)
             {
                 // Desired velocity line.
-                Debug.DrawLine(transform.position, transform.position + desiredVel, Color.gray);
+                Debug.DrawLine(transform.position, transform.position + targetVelocity, Color.gray);
                 // Final velocity line.
-                Debug.DrawLine(transform.position, transform.position + currentVel, Color.black);
+                Debug.DrawLine(transform.position, transform.position + currentVelocity, Color.black);
             }
 #endif
 
-            return currentVel;
+            return currentVelocity;
         }
 
         /// <summary>
         /// Decelerate velocity to zero.
         /// </summary>
-        /// <param name="currentVel"></param>
+        /// <param name="currentVelocity"></param>
         /// <param name="friction"></param>
         /// <param name="decel"></param>
         /// <param name="deltaTime"></param>
         /// <returns></returns>
-        private static Vector3 ApplyVelocityBraking(Vector3 currentVel, Vector3 currentDirection,
+        private static Vector3 ApplyVelocityBraking(Vector3 currentVelocity, Vector3 currentDirection,
             float friction, float decel, float deltaTime)
         {
             bool isZeroFriction = friction == 0f;
             bool isZeroDecel = decel == 0f;
-            if (isZeroFriction && isZeroDecel) return currentVel;
+            if (isZeroFriction && isZeroDecel) return currentVelocity;
 
             // Calculate braking deceleration.
-            Vector3 oldVel = currentVel;
+            Vector3 oldVel = currentVelocity;
             Vector3 decelVec = isZeroDecel ? Vector3.zero : -decel * currentDirection;
 
             // Apply friction and deceleration.
-            currentVel += (-friction * currentVel + decelVec) * deltaTime;
+            currentVelocity += (-friction * currentVelocity + decelVec) * deltaTime;
 
             // Stop before we start to go backwards.
-            if (Vector3.Dot(currentVel, oldVel) <= 0f) return Vector3.zero;
+            if (Vector3.Dot(currentVelocity, oldVel) <= 0f) return Vector3.zero;
 
             // Snap to zero.
-            if (currentVel.sqrMagnitude <= 0.1f) return Vector3.zero;
+            if (currentVelocity.sqrMagnitude <= 0.1f) return Vector3.zero;
 
-            return currentVel;
+            return currentVelocity;
         }
 
-        private static Vector3 ApplyDeceleration(Vector3 currentVel, Vector3 currentDirection, float desiredSpeed, float desiredSpeedSqr, float decel, float deltaTime)
+        private static Vector3 ApplyDeceleration(Vector3 currentVelocity, Vector3 currentDirection, 
+            float targetSpeed, float decel, float deltaTime)
         {
             bool isZeroDecel = decel == 0f;
-            if (isZeroDecel) return currentVel;
+            if (isZeroDecel) return currentVelocity;
 
-            currentVel += deltaTime * -decel * currentDirection;
-            if (currentVel.sqrMagnitude < desiredSpeedSqr) currentVel = Vector3.ClampMagnitude(currentVel, desiredSpeed);
-            return currentVel;
+            currentVelocity += deltaTime * -decel * currentDirection;
+            currentVelocity = Vector3.ClampMagnitude(currentVelocity, targetSpeed);
+            return currentVelocity;
         }
 
-        private static Vector3 ApplyFriction(Vector3 currentVel, float currentSpeed, Vector3 desiredDirection, float friction, float deltaTime)
+        private static Vector3 ApplyFriction(Vector3 currentVelocity, float currentSpeed, 
+            Vector3 desiredDirection, float friction, float deltaTime)
         {
-            currentVel -= (currentVel - desiredDirection * currentSpeed) * Mathf.Min(friction * deltaTime, 1f);
-            return currentVel;
+            currentVelocity -= (currentVelocity - desiredDirection * currentSpeed) * Mathf.Min(friction * deltaTime, 1f);
+            return currentVelocity;
         }
 
         #endregion

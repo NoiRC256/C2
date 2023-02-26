@@ -1,11 +1,10 @@
 using Animancer;
 using NekoLib.Movement;
-using System;
 using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
-    public class AvatarLocomotion : MonoBehaviour
+    public class AvatarMovement : MonoBehaviour
     {
         #region Exposed Fields
 
@@ -106,7 +105,7 @@ namespace NekoNeko.Avatar
 
         public void RootMotionInputMove(Vector3 velocity)
         {
-            _mover.SetActiveVelocity(velocity);
+            _mover.InputMove(velocity);
         }
 
         public void RootMotionInputMove(Vector3 velocity, Vector2 input)
