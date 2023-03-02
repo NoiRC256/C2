@@ -21,9 +21,6 @@ namespace NekoNeko
             NekoLib.GameEngine.Register<IObjectPoolManager, ObjectPoolManager>();
 
             Debug.Log("Game Entry Initialized");
-
-            var gameConfig = new GameConfig();
-            Debug.Log(gameConfig.frameRate);
         }
     }
 }
