@@ -22,7 +22,7 @@ namespace NekoLib.Movement
         void ClearActiveVelocity();
         void SetPassiveVelocity(Vector3 velocity);
         void ClearPassiveVelocity();
-        void SetExtraVelocity(Vector3 vel);
+        void AddExtraVelocity(Vector3 vel);
         void ClearExtraVelocity();
         public void SetOverrideVelocity(Vector3 velocity,
             bool clearActiveVelocity = false, bool ignoreConnectedGround = false);

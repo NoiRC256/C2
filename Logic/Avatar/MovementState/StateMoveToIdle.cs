@@ -34,6 +34,11 @@ namespace NekoNeko.Avatar
             }
         }
 
+        public override void OnExitState()
+        {
+            base.OnExitState();
+        }
+
         public override void OnCheckTransitions()
         {
             if (_input.Move.IsPressed())
@@ -54,13 +59,13 @@ namespace NekoNeko.Avatar
             {
                 case AvatarData.MovementStateType.Walk:
                     _state.Speed = (_data.MovementConfig.RunSpeed / _avatar.StateRunConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
-                    _movement.RootMotionInputMove(_movement.RootMotion.Velocity);
+                    _movement.RootMotionInputMove();
                     break;
                 case AvatarData.MovementStateType.Run:
                     break;
                 case AvatarData.MovementStateType.Sprint:
                     _state.Speed = (_data.MovementConfig.SprintSpeed / _avatar.StateSprintConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
-                    _movement.RootMotionInputMove(_movement.RootMotion.Velocity);
+                    _movement.RootMotionInputMove();
                     break;
             }
         }

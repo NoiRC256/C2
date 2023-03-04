@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
+    /// <summary>
+    /// Provides configurations and methods for avatar movement.
+    /// </summary>
     public class AvatarMovement : MonoBehaviour
     {
         #region Exposed Fields
@@ -43,7 +46,6 @@ namespace NekoNeko.Avatar
         public AvatarData Data { get; set; }
         public AvatarInput Input { get; set; }
         public FacingHandler FacingHandler { get; private set; } = new FacingHandler();
-        public VelocitySource _rootMotionVelocity = new VelocitySource(true);
 
         #region MonoBehaviour
 
@@ -55,7 +57,6 @@ namespace NekoNeko.Avatar
         private void Start()
         {
             Data.LastInputDirection = transform.forward;
-            _mover.AddVelocitySource(_rootMotionVelocity);
         }
 
         #endregion
@@ -98,31 +99,23 @@ namespace NekoNeko.Avatar
             InputMove(speed, inputDirection);
         }
 
-        public void RootMotionMove(Vector3 velocity)
+        public void RootMotionInputMove()
         {
-            _rootMotionVelocity.Velocity = velocity;
+            _mover.InputMove(RootMotion.Velocity);
         }
 
-        public void RootMotionInputMove(Vector3 velocity)
-        {
-            _mover.InputMove(velocity);
-        }
-
-        public void RootMotionInputMove(Vector3 velocity, Vector2 input)
-        {
-            RootMotionInputMove(velocity.magnitude, input);
-        }
-
-        public void RootMotionInputMove(float speed, Vector2 input)
+        public void RootMotionInputMove(Vector2 input)
         {
             if (input == Vector2.zero)
             {
-                RootMotionInputMove(speed * Data.LastNonZeroInputDirection);
+                RootMotionInputMove();
                 return;
             }
+            float inputSpeed = RootMotion.Velocity.magnitude;
             Vector3 inputDirection = DirectionFromInput(input, _directionTr);
+            Data.LastMoveSpeed = inputSpeed;
             Data.LastInputDirection = inputDirection;
-            RootMotionInputMove(speed * inputDirection);
+            _mover.InputMove(inputSpeed * inputDirection);
         }
 
         public void MoveDeltaPosition(Vector3 deltaPosition, bool alignToGround = true, bool restrictToGround = false)

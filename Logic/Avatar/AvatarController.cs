@@ -3,6 +3,9 @@ using Animancer;
 
 namespace NekoNeko.Avatar
 {
+    /// <summary>
+    /// Main avatar controller.
+    /// </summary>
     public class AvatarController : MonoBehaviour
     {
         [field: SerializeField] public AvatarData Data { get; private set; }

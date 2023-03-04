@@ -15,6 +15,11 @@ namespace NekoNeko.Avatar
             _data.MovementState = AvatarData.MovementStateType.Walk;
         }
 
+        public override void OnExitState()
+        {
+            base.OnExitState();
+        }
+
         public override void OnCheckTransitions()
         {
             base.OnCheckTransitions();
@@ -41,7 +46,7 @@ namespace NekoNeko.Avatar
             float speedFactor = (_data.MovementConfig.WalkSpeed / _movement.WalkReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
             _state.Speed = speedFactor;
             _data.ForwardFoot = _movement.EvaluateFootCycle(_state.NormalizedTime, GetFootCycleConfig());
-            _movement.RootMotionInputMove(_movement.RootMotion.Velocity, _input.Move.ReadValue<Vector2>());
+            _movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
         }
 

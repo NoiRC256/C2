@@ -384,9 +384,9 @@ namespace NekoLib.Movement
         #region Input Move
 
         /// <summary>
-        /// Move by setting the active movement velocity using the specified input speed and direction.
-        /// <para>Active movement velocity is subject to velocity physics calculations.</para>
-        /// <para>The provided input speed and direction will persist across fixed updates.</para>
+        /// Move by setting the active velocity target using the specified input speed and direction.
+        /// <para>Active velocity undergoes velocity physics calculations
+        /// to reach the active velocity target.</para>
         /// </summary>
         /// <param name="inputSpeed"></param>
         /// <param name="inputDirection"></param>
@@ -395,13 +395,21 @@ namespace NekoLib.Movement
             InputMove(inputSpeed * inputDirection);
         }
 
+        /// <summary>
+        /// Move by setting the active velocity target.
+        /// <para>Active velocity undergoes velocity physics calculations
+        /// to reach the active velocity target.</para>
+        /// </summary>
+        /// <param name="velocity"></param>
         public void InputMove(Vector3 velocity)
         {
             _activeVelocityTarget = velocity;
         }
 
         /// <summary>
-        /// Forcefully set the active velocity that is undergoing velocity physics processing.
+        /// Set the active velocity.
+        /// <para>Active velocity will persist across fixed updates,
+        /// and undergoes velocity physics calculations.</para>
         /// </summary>
         /// <param name="velocity"></param>
         public void SetActiveVelocity(Vector3 velocity)
@@ -439,9 +447,9 @@ namespace NekoLib.Movement
         /// <para>Extra velocity will be cleared at the end of the physics update.</para>
         /// </summary>
         /// <param name="velocity"></param>
-        public void SetExtraVelocity(Vector3 velocity)
+        public void AddExtraVelocity(Vector3 velocity)
         {
-            _extraVel = velocity;
+            _extraVel += velocity;
         }
 
         public void ClearExtraVelocity()
@@ -488,17 +496,16 @@ namespace NekoLib.Movement
             _velocitySources.Remove(velocitySource);
         }
 
-        public void UpdateVelocitySources(out Vector3 totalVelocity, out Vector3 totalAlignToGroundVelocity)
+        public Vector3 UpdateVelocitySources(float deltaTime)
         {
-            totalVelocity = Vector3.zero;
-            totalAlignToGroundVelocity = Vector3.zero;
+            Vector3 totalVelocity = Vector3.zero;
             for (int i = 0; i < _velocitySources.Count; i++)
             {
                 IVelocitySource velocitySource = _velocitySources[i];
-                Vector3 velocity = velocitySource.Evaluate();
-                if (velocitySource.AlignToGround) totalAlignToGroundVelocity += velocity;
-                else totalVelocity += velocity;
+                Vector3 velocity = velocitySource.Evaluate(deltaTime);
+                totalVelocity += velocity;
             }
+            return totalVelocity;
         }
 
         #endregion
@@ -507,16 +514,11 @@ namespace NekoLib.Movement
 
         public void AddImpulse(Impulse impulse)
         {
-            // If impulse already exists, restart it. Otherwise add impulse.
-            // We expect to deal with only 1~10 impulses max, so this should work fine. 
-            if (_impulses.Contains(impulse))
-            {
-                impulse.Start();
-            }
-            else
+            if (!_impulses.Contains(impulse))
             {
                 _impulses.Add(impulse);
             }
+            else impulse.Start();
         }
 
         public void RemoveImpulse(Impulse impulse)
@@ -524,7 +526,7 @@ namespace NekoLib.Movement
             _impulses.Remove(impulse);
         }
 
-        private Vector3 RefreshImpulses(float deltaTime)
+        private Vector3 UpdateImpulses(float deltaTime)
         {
             Vector3 impulseVel = Vector3.zero;
             for (int i = _impulses.Count - 1; i >= 0; i--)
@@ -564,7 +566,7 @@ namespace NekoLib.Movement
         private void UpdateMovement(float deltaTime)
         {
             // Calculate final velocity.
-            Vector3 finalVel = CalculateFinalVel(deltaTime);
+            Vector3 finalVel = CalculateFinalVelocity(deltaTime);
 
             if (!IsOnGround)
             {
@@ -596,17 +598,17 @@ namespace NekoLib.Movement
             _hasOverrideVel = false;
         }
 
-        private Vector3 CalculateFinalVel(float deltaTime)
+        private Vector3 CalculateFinalVelocity(float deltaTime)
         {
             // Refresh active velocity. Apply velocity physics.
             _activeVelocity = UpdateVelocityPhysics(_activeVelocity, _activeVelocityTarget, deltaTime);
 
             // Refresh impulses.
-            Vector3 impulseVelocity = RefreshImpulses(deltaTime);
+            Vector3 impulseVelocity = UpdateImpulses(deltaTime);
                              
             // Calculate final velocity.
             Vector3 finalVelocity = Vector3.zero;
-            SlopeNormal = CalcSlopeNormal(GroundNormal);
+            SlopeNormal = CalculateSlopeNormal(GroundNormal);
             if (_hasOverrideVel)
             {
                 finalVelocity = _overrideVel;
@@ -619,14 +621,12 @@ namespace NekoLib.Movement
                 Vector3 groundAlignedVelocity = Vector3.zero;
 
                 // Velocities from velocity sources.
-                Vector3 sourceVelocity;
-                Vector3 sourceVelocityAlignToGround;
-                UpdateVelocitySources(out sourceVelocity, out sourceVelocityAlignToGround);
+                Vector3 sourceVelocity = UpdateVelocitySources(deltaTime);
 
                 // Rotate velocity to align to ground.
-                if (IsOnGround) groundAlignedVelocity = AlignVelocityToNormal(_activeVelocity + sourceVelocityAlignToGround, SlopeNormal);
+                if (IsOnGround) groundAlignedVelocity = AlignVelocityToNormal(_activeVelocity + sourceVelocity, SlopeNormal);
 
-                finalVelocity = groundAlignedVelocity + sourceVelocity + _passiveVel + _extraVel + impulseVelocity;
+                finalVelocity = groundAlignedVelocity + _passiveVel + _extraVel + impulseVelocity;
             }
 
             finalVelocity += _connectedBodyVel;
@@ -673,7 +673,7 @@ namespace NekoLib.Movement
         /// </summary>
         /// <param name="groundNormal"></param>
         /// <returns></returns>
-        private Vector3 CalcSlopeNormal(Vector3 groundNormal)
+        private Vector3 CalculateSlopeNormal(Vector3 groundNormal)
         {
             bool foundSlope = false;
             Vector3 slopeNormal = groundNormal;

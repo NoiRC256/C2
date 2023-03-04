@@ -6,7 +6,7 @@ namespace NekoNeko.Avatar
     public class StateIdleToMove : AvatarStateBase
     {
         AnimancerState _state;
-        private float _counter;
+        private float _counter = 0f;
 
         public StateIdleToMove(AvatarController avatar) : base(avatar)
         {
@@ -31,6 +31,11 @@ namespace NekoNeko.Avatar
             _data.MovementState = AvatarData.MovementStateType.Run;
         }
 
+        public override void OnExitState()
+        {
+            base.OnExitState();
+        }
+
         public override void OnCheckTransitions()
         {
             _counter += Time.deltaTime;
@@ -53,7 +58,8 @@ namespace NekoNeko.Avatar
         {
             float speedFactor = (_data.MovementConfig.RunSpeed / _movement.RunReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
             _state.Speed = speedFactor;
-            _movement.RootMotionInputMove(_movement.RootMotion.Velocity, _input.Move.ReadValue<Vector2>());
+            //_movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
+            _movement.InputMove(_data.MovementConfig.RunSpeed, _input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
         }
 
