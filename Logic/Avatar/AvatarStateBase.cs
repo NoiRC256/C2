@@ -4,18 +4,18 @@ namespace NekoNeko.Avatar
 {
     public abstract class AvatarStateBase : IState
     {
-        public class StateMachine : StateMachine<AvatarStateBase>.WithDefault { }
+        public class StateMachine : StateMachine<AvatarStateBase>.WithDefault {}
 
         protected AvatarStateBase.StateMachine _stateMachine;
-        protected AvatarController _avatar;
+        protected TPSAvatarController _avatar;
 
         protected AvatarData _data;
         protected AvatarInput _input;
         protected AvatarMovement _movement;
         protected AvatarAim _aim;
-        private AvatarController avatar;
+        private TPSAvatarController avatar;
 
-        public AvatarStateBase(AvatarController avatar)
+        public AvatarStateBase(TPSAvatarController avatar)
         {
             _stateMachine = avatar.StateMachine;
             _avatar = avatar;

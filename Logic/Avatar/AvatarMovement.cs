@@ -1,4 +1,3 @@
-using Animancer;
 using NekoLib.Movement;
 using UnityEngine;
 
@@ -7,59 +6,25 @@ namespace NekoNeko.Avatar
     /// <summary>
     /// Provides configurations and methods for avatar movement.
     /// </summary>
-    public class AvatarMovement : MonoBehaviour
+    [System.Serializable]
+    public class AvatarMovement
     {
         #region Exposed Fields
 
         [SerializeField] private CharacterMover _mover;
-        [SerializeField] private Transform _directionTr;
         [SerializeField] private Transform _dummyRoot;
 
+        [field: SerializeField] public Transform DirectionTr { get; set; }
         [field: SerializeField] public MonoRootMotion RootMotion { get; private set; }
         [field: SerializeField] public float DefaultFacingSmoothDuration { get; set; } = 0.15f;
         [field: SerializeField] public float IdleToMoveMinExitTime { get; private set; } = 0.25f;
-
-        [field: Header("Animations")]
-        [field: SerializeField] public ClipTransitionAsset.UnShared Idle { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared Walk { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared WalkStopL { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared WalkStopR { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared RunStartL { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared RunStartR { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared Run { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared RunStopL { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared RunStopR { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared Sprint { get; private set; }
-        [field: SerializeField] public ClipTransitionAsset.UnShared SprintStopR { get; private set; }
-        [field: SerializeField] public LinearMixerTransitionAsset.UnShared MovementMixer { get; private set; }
-
-        [field: Header("Animation Parameters")]
-        [field: SerializeField] public FootCycleConfig WalkFootCycle { get; private set; }
-        [field: SerializeField] public FootCycleConfig RunFootCycle { get; private set; }
-        [field: SerializeField] public FootCycleConfig SprintFootCycle { get; private set; }
-        [field: SerializeField] public float WalkReferenceSpeed { get; private set; } = 1.5f;
-        [field: SerializeField] public float RunReferenceSpeed { get; private set; } = 3f;
-        [field: SerializeField] public float SprintReferenceSpeed { get; private set; } = 5f;
+        [field: SerializeField] public AvatarAnimConfig AnimationConfig { get; private set; }
 
         #endregion
 
         public AvatarData Data { get; set; }
         public AvatarInput Input { get; set; }
         public FacingHandler FacingHandler { get; private set; } = new FacingHandler();
-
-        #region MonoBehaviour
-
-        private void Awake()
-        {
-            if (_directionTr == null) _directionTr = this.transform;
-        }
-
-        private void Start()
-        {
-            Data.LastInputDirection = transform.forward;
-        }
-
-        #endregion
 
         #region Logic
 
@@ -68,16 +33,6 @@ namespace NekoNeko.Avatar
             Data.HasMovementInput = Input.Move.IsPressed();
             FacingHandler.OnUpdate(deltaTime);
             SetFacing(FacingHandler.CurrentFacing);
-        }
-
-        /// <summary>
-        /// Move without recording the speed and direction.
-        /// </summary>
-        /// <param name="speed"></param>
-        /// <param name="direction"></param>
-        public void InputMoveNoCache(float speed, Vector3 direction)
-        {
-            _mover.InputMove(speed, direction);
         }
 
         public void InputMove(float speed, Vector3 direction)
@@ -89,7 +44,7 @@ namespace NekoNeko.Avatar
 
         public void InputMove(float speed, Vector2 input)
         {
-            Vector3 inputDirection = DirectionFromInput(input, _directionTr);
+            Vector3 inputDirection = DirectionFromInput(input, DirectionTr);
             InputMove(speed, inputDirection);
         }
 
@@ -97,6 +52,11 @@ namespace NekoNeko.Avatar
         {
             Vector3 inputDirection = DirectionFromInput(input, directionTr);
             InputMove(speed, inputDirection);
+        }
+
+        public void RootMotionRotate()
+        {
+            MoveDeltaRotation(RootMotion.DeltaRotation);
         }
 
         public void RootMotionInputMove()
@@ -112,15 +72,10 @@ namespace NekoNeko.Avatar
                 return;
             }
             float inputSpeed = RootMotion.Velocity.magnitude;
-            Vector3 inputDirection = DirectionFromInput(input, _directionTr);
+            Vector3 inputDirection = DirectionFromInput(input, DirectionTr);
             Data.LastMoveSpeed = inputSpeed;
             Data.LastInputDirection = inputDirection;
             _mover.InputMove(inputSpeed * inputDirection);
-        }
-
-        public void MoveDeltaPosition(Vector3 deltaPosition, bool alignToGround = true, bool restrictToGround = false)
-        {
-            _mover.MoveDeltaPosition(deltaPosition, alignToGround, restrictToGround);
         }
 
         public void MoveDeltaRotation(Quaternion deltaRotation)

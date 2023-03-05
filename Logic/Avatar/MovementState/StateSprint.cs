@@ -1,13 +1,11 @@
-using Animancer.FSM;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using Animancer;
 
 namespace NekoNeko.Avatar
 {
     public class StateSprint : StateLocomotionBase
     {
-        public StateSprint(AvatarController avatar, LocomotionStateConfig config) : base(avatar, config)
+        public StateSprint(TPSAvatarController avatar) : base(avatar)
         {
         }
 
@@ -37,11 +35,17 @@ namespace NekoNeko.Avatar
                 _data.WalkToggle = !_data.WalkToggle;
             }
 
-            float speedFactor = (GetMoveSpeed() / GetMoveReferenceSpeed()) * _data.MoveSpeedMultiplier.Value;
-            _state.Speed = speedFactor;
+            _state.Speed = (GetMoveSpeed() / GetMoveReferenceSpeed()) * _data.MoveSpeedMultiplier.Value;
             _data.ForwardFoot = _movement.EvaluateFootCycle(_state.NormalizedTime, GetFootCycleConfig());
             _movement.InputMove(GetMoveSpeed(), _input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
+        }
+
+        protected override LocomotionAnimConfig GetLocomotionAnimConfig() => _movement.AnimationConfig.SprintConfig;
+
+        protected override ITransition GetLocomotionAnimation()
+        {
+            return _movement.AnimationConfig.Sprint;
         }
 
         protected override float GetMoveSpeed()

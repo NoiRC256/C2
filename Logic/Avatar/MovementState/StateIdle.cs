@@ -4,7 +4,7 @@ namespace NekoNeko.Avatar
 {
     public class StateIdle : AvatarStateBase
     {
-        public StateIdle(AvatarController avatar) : base(avatar)
+        public StateIdle(TPSAvatarController avatar) : base(avatar)
         {
         }
 
@@ -13,7 +13,7 @@ namespace NekoNeko.Avatar
             _movement.InputMove(0f, Vector3.zero);
             _data.ForwardFoot = 1f;
 
-            _avatar.Animancer.Play(_movement.Idle);
+            _avatar.Animancer.Play(_movement.AnimationConfig.Idle);
 
             _data.MovementState = AvatarData.MovementStateType.Idle;
         }

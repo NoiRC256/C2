@@ -6,7 +6,7 @@ namespace NekoNeko.Avatar
     /// <summary>
     /// Main avatar controller.
     /// </summary>
-    public class AvatarController : MonoBehaviour
+    public class TPSAvatarController : MonoBehaviour
     {
         [field: SerializeField] public AvatarData Data { get; private set; }
         [field: SerializeField] public AvatarInput Input { get; private set; }
@@ -15,10 +15,9 @@ namespace NekoNeko.Avatar
         [field: SerializeField] public AvatarMovement Movement { get; private set; }
         [field: SerializeField] public AvatarAim Aim { get; private set; }
 
+        [field:Header("State Configuration")]
         [field: SerializeField] public AvatarStateBase.StateMachine StateMachine { get; private set; }
-        [field: SerializeField] public LocomotionStateConfig StateWalkConfig { get; private set; }
-        [field: SerializeField] public LocomotionStateConfig StateRunConfig { get; private set; }
-        [field: SerializeField] public LocomotionStateConfig StateSprintConfig { get; private set; }
+
 
         public AvatarStateBase StateIdle { get; private set; }
         public AvatarStateBase StateIdleToMove { get; private set; }
@@ -41,9 +40,9 @@ namespace NekoNeko.Avatar
         {
             StateIdle = new StateIdle(this);
             StateIdleToMove = new StateIdleToMove(this);
-            StateWalk = new StateWalk(this, StateWalkConfig);
-            StateRun = new StateRun(this, StateRunConfig);
-            StateSprint = new StateSprint(this, StateSprintConfig);
+            StateWalk = new StateWalk(this);
+            StateRun = new StateRun(this);
+            StateSprint = new StateSprint(this);
             StateMoveToIdle = new StateMoveToIdle(this);
             StateMachine.DefaultState = StateIdle;
         }
@@ -55,6 +54,11 @@ namespace NekoNeko.Avatar
             StateMachine.CurrentState.OnUpdate(Time.deltaTime);
             Movement.OnUpdate(deltaTime);
             Aim.OnUpdate(deltaTime);
+        }
+
+        private void OnGUI()
+        {
+            GUI.Label(new Rect(10,10,500,90), StateMachine.CurrentState.ToString());
         }
     }
 }

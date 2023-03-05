@@ -1,10 +1,11 @@
+using Animancer;
 using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
     public class StateWalk : StateLocomotionBase
     {
-        public StateWalk(AvatarController avatar, LocomotionStateConfig config) : base(avatar, config)
+        public StateWalk(TPSAvatarController avatar) : base(avatar)
         {
         }
 
@@ -43,11 +44,17 @@ namespace NekoNeko.Avatar
         {
             base.OnUpdate(deltaTime);
 
-            float speedFactor = (_data.MovementConfig.WalkSpeed / _movement.WalkReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
-            _state.Speed = speedFactor;
+            _state.Speed = (_data.MovementConfig.WalkSpeed / GetMoveReferenceSpeed()) * _data.MoveSpeedMultiplier.Value;
             _data.ForwardFoot = _movement.EvaluateFootCycle(_state.NormalizedTime, GetFootCycleConfig());
             _movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
+        }
+
+        protected override LocomotionAnimConfig GetLocomotionAnimConfig() => _movement.AnimationConfig.WalkConfig;
+
+        protected override ITransition GetLocomotionAnimation()
+        {
+            return _movement.AnimationConfig.Walk;
         }
 
         protected override float GetMoveSpeed()

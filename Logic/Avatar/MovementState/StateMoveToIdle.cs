@@ -7,7 +7,7 @@ namespace NekoNeko.Avatar
     {
         private AnimancerState _state;
 
-        public StateMoveToIdle(AvatarController avatar) : base(avatar)
+        public StateMoveToIdle(TPSAvatarController avatar) : base(avatar)
         {
         }
 
@@ -18,18 +18,18 @@ namespace NekoNeko.Avatar
             switch (_data.MovementState)
             {
                 case AvatarData.MovementStateType.Walk:
-                    _movement.WalkStopL.Events.OnEnd = End;
-                    _movement.WalkStopR.Events.OnEnd = End;
-                    _state = PlayMoveStopClip(_movement.WalkStopL, _movement.WalkStopR);
+                    _movement.AnimationConfig.WalkStopL.Events.OnEnd = End;
+                    _movement.AnimationConfig.WalkStopR.Events.OnEnd = End;
+                    _state = PlayMoveStopClip(_movement.AnimationConfig.WalkStopL, _movement.AnimationConfig.WalkStopR);
                     break;
                 case AvatarData.MovementStateType.Run:
-                    _movement.RunStopL.Events.OnEnd = End;
-                    _movement.RunStopR.Events.OnEnd = End;
-                    _state = PlayMoveStopClip(_movement.RunStopL, _movement.RunStopR);
+                    _movement.AnimationConfig.RunStopL.Events.OnEnd = End;
+                    _movement.AnimationConfig.RunStopR.Events.OnEnd = End;
+                    _state = PlayMoveStopClip(_movement.AnimationConfig.RunStopL, _movement.AnimationConfig.RunStopR);
                     break;
                 case AvatarData.MovementStateType.Sprint:
                     _data.ForwardFoot = 0f;
-                    _state = _avatar.Animancer.Play(_movement.SprintStopR);
+                    _state = _avatar.Animancer.Play(_movement.AnimationConfig.SprintStopR);
                     break;
             }
         }
@@ -58,13 +58,13 @@ namespace NekoNeko.Avatar
             switch (_data.MovementState)
             {
                 case AvatarData.MovementStateType.Walk:
-                    _state.Speed = (_data.MovementConfig.RunSpeed / _avatar.StateRunConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+                    _state.Speed = (_data.MovementConfig.RunSpeed / _movement.AnimationConfig.WalkConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
                     _movement.RootMotionInputMove();
                     break;
                 case AvatarData.MovementStateType.Run:
                     break;
                 case AvatarData.MovementStateType.Sprint:
-                    _state.Speed = (_data.MovementConfig.SprintSpeed / _avatar.StateSprintConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+                    _state.Speed = (_data.MovementConfig.SprintSpeed / _movement.AnimationConfig.SprintConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
                     _movement.RootMotionInputMove();
                     break;
             }

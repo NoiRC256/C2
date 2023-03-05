@@ -1,12 +1,11 @@
-﻿using UnityEngine;
+﻿using Animancer;
+using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
     public abstract class StateLocomotionBase : AvatarStateBase
     {
         protected Animancer.AnimancerState _state;
-
-        protected LocomotionStateConfig Config { get; private set; }
 
         // Mixer.
         protected float CurrentBlend { 
@@ -18,33 +17,28 @@ namespace NekoNeko.Avatar
             set => _data.LocomotionTargetBlend = value;
         }
         protected float BlendParameter {
-            get => _movement.MovementMixer.State.Parameter;
-            set => _movement.MovementMixer.State.Parameter = value;
+            get => _movement.AnimationConfig.MovementMixer.State.Parameter;
+            set => _movement.AnimationConfig.MovementMixer.State.Parameter = value;
         }
 
         protected bool _isBlending;
         protected float _blendElapsedTime;
 
-        public StateLocomotionBase(AvatarController avatar, LocomotionStateConfig config) : base(avatar)
+        protected StateLocomotionBase(TPSAvatarController avatar) : base(avatar)
         {
-            Config = config;
         }
 
         public override void OnEnterState()
         {
-            if (_stateMachine.PreviousState is StateLocomotionBase == false)
+            if (_stateMachine.PreviousState is StateLocomotionBase)
             {
-                _state = _avatar.Animancer.Play(_movement.MovementMixer);
-                if (_data.ForwardFoot == 1f) _state.NormalizedTime += _movement.RunFootCycle.Duration;
-                BlendParameter = CurrentBlend = TargetBlend = Config.DefaultBlendParameter;
+                float normalizedTime = _avatar.Animancer.States.Current.NormalizedTime;
+                _state = _avatar.Animancer.Play(GetLocomotionAnimation());
+                _state.NormalizedTime += normalizedTime;
             }
             else
             {
-                _state = _avatar.Animancer.States.Current;
-                StateLocomotionBase previousState = (StateLocomotionBase)_stateMachine.PreviousState;
-                float parameter = GetDefaultBlendParameter(previousState);
-                CurrentBlend = parameter;
-                BlendParameterTo(Config.DefaultBlendParameter);
+                _state = _avatar.Animancer.Play(GetLocomotionAnimation());
             }
         }
 
@@ -57,45 +51,14 @@ namespace NekoNeko.Avatar
             }
         }
 
-        public override void OnUpdate(float deltaTime)
-        {
-            UpdateParameterBlend(deltaTime);
-        }
+        protected abstract LocomotionAnimConfig GetLocomotionAnimConfig();
 
-        public virtual float GetDefaultBlendParameter(StateLocomotionBase locomotionState)
-        {
-            return locomotionState.Config.DefaultBlendParameter;
-        }
-
-        protected virtual void BlendParameterTo(float value)
-        {
-            if (Config.BlendDuration <= 0f)
-            {
-                BlendParameter = value;
-                return;
-            }
-            TargetBlend = value;
-            _isBlending = true;
-            _blendElapsedTime = 0f;
-        }
-
-        protected virtual void UpdateParameterBlend(float deltaTime)
-        {
-            if (!_isBlending) return;
-            _blendElapsedTime += deltaTime;
-            float blendSpeed = Mathf.Abs(TargetBlend - CurrentBlend) / (Config.BlendDuration - _blendElapsedTime);
-            CurrentBlend = Mathf.MoveTowards(CurrentBlend, TargetBlend, blendSpeed * deltaTime);
-            BlendParameter = CurrentBlend;
-            if(CurrentBlend == TargetBlend)
-            {
-                _isBlending = false;
-            }
-        }
+        protected abstract ITransition GetLocomotionAnimation();
 
         protected abstract float GetMoveSpeed();
 
-        protected virtual float GetMoveReferenceSpeed() => Config.ReferenceSpeed;
+        protected virtual float GetMoveReferenceSpeed() => GetLocomotionAnimConfig().ReferenceSpeed;
 
-        protected virtual FootCycleConfig GetFootCycleConfig() => Config.FootCycle;
+        protected virtual FootCycleConfig GetFootCycleConfig() => GetLocomotionAnimConfig().FootCycle;
     }
 }

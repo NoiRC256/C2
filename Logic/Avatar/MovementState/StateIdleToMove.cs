@@ -8,7 +8,7 @@ namespace NekoNeko.Avatar
         AnimancerState _state;
         private float _counter = 0f;
 
-        public StateIdleToMove(AvatarController avatar) : base(avatar)
+        public StateIdleToMove(TPSAvatarController avatar) : base(avatar)
         {
         }
 
@@ -20,11 +20,11 @@ namespace NekoNeko.Avatar
                 return;
             }
 
-            _movement.RunStartL.Events.OnEnd = End;
-            _movement.RunStartR.Events.OnEnd = End;
+            _movement.AnimationConfig.RunStartL.Events.OnEnd = End;
+            _movement.AnimationConfig.RunStartR.Events.OnEnd = End;
 
-            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_movement.RunStartL);
-            else _state = _avatar.Animancer.Play(_movement.RunStartR);
+            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_movement.AnimationConfig.RunStartL);
+            else _state = _avatar.Animancer.Play(_movement.AnimationConfig.RunStartR);
 
             _counter = 0f;
 
@@ -52,14 +52,17 @@ namespace NekoNeko.Avatar
                 _stateMachine.TrySetState(_avatar.StateMoveToIdle);
                 return;
             }
+
+            if (_state.NormalizedTime >= _movement.AnimationConfig.RunStartMaxExitTime)
+            {
+                _stateMachine.TrySetState(_avatar.StateRun);
+            }
         }
 
         public override void OnUpdate(float deltaTime)
         {
-            float speedFactor = (_data.MovementConfig.RunSpeed / _movement.RunReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
-            _state.Speed = speedFactor;
-            //_movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
-            _movement.InputMove(_data.MovementConfig.RunSpeed, _input.Move.ReadValue<Vector2>());
+            _state.Speed = (_data.MovementConfig.RunSpeed / _movement.AnimationConfig.RunConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+            _movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
         }
 
