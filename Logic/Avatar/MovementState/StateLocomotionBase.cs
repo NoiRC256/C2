@@ -1,28 +1,16 @@
 ﻿using Animancer;
-using UnityEngine;
 
 namespace NekoNeko.Avatar
 {
+    /// <summary>
+    /// Base state for locomotions like running, walking, sprinting.
+    /// <para>Contains common logic for matching animation speed and updating foot cycle data.</para>
+    /// </summary>
     public abstract class StateLocomotionBase : AvatarStateBase
     {
         protected Animancer.AnimancerState _state;
-
-        // Mixer.
-        protected float CurrentBlend { 
-            get => _data.LocomotionBlend; 
-            set => _data.LocomotionBlend = value; 
-        }
-        protected float TargetBlend {
-            get => _data.LocomotionTargetBlend;
-            set => _data.LocomotionTargetBlend = value;
-        }
-        protected float BlendParameter {
-            get => _movement.AnimationConfig.MovementMixer.State.Parameter;
-            set => _movement.AnimationConfig.MovementMixer.State.Parameter = value;
-        }
-
-        protected bool _isBlending;
-        protected float _blendElapsedTime;
+        protected abstract ITransition LocomotionAnim { get; }
+        protected abstract LocomotionAnimConfig LocomotionAnimConfig { get; }
 
         protected StateLocomotionBase(TPSAvatarController avatar) : base(avatar)
         {
@@ -30,15 +18,16 @@ namespace NekoNeko.Avatar
 
         public override void OnEnterState()
         {
+            // If previous state is also locomotion state, inherit the normalized time for locomotion cycle.
             if (_stateMachine.PreviousState is StateLocomotionBase)
             {
                 float normalizedTime = _avatar.Animancer.States.Current.NormalizedTime;
-                _state = _avatar.Animancer.Play(GetLocomotionAnimation());
+                _state = _avatar.Animancer.Play(LocomotionAnim);
                 _state.NormalizedTime += normalizedTime;
             }
             else
             {
-                _state = _avatar.Animancer.Play(GetLocomotionAnimation());
+                _state = _avatar.Animancer.Play(LocomotionAnim);
             }
         }
 
@@ -51,14 +40,22 @@ namespace NekoNeko.Avatar
             }
         }
 
-        protected abstract LocomotionAnimConfig GetLocomotionAnimConfig();
+        public override void OnUpdate(float deltaTime)
+        {
+            UpdateStateSpeed();
+            UpdateFootCycle();
+        }
 
-        protected abstract ITransition GetLocomotionAnimation();
+        protected virtual void UpdateStateSpeed()
+        {
+            _state.Speed = (GetMoveSpeed() / LocomotionAnimConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+        }
+
+        protected virtual void UpdateFootCycle()
+        {
+            _data.ForwardFoot = _movement.EvaluateFootCycle(_state.NormalizedTime, LocomotionAnimConfig.FootCycle);
+        }
 
         protected abstract float GetMoveSpeed();
-
-        protected virtual float GetMoveReferenceSpeed() => GetLocomotionAnimConfig().ReferenceSpeed;
-
-        protected virtual FootCycleConfig GetFootCycleConfig() => GetLocomotionAnimConfig().FootCycle;
     }
 }

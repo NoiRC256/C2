@@ -5,6 +5,9 @@ namespace NekoNeko.Avatar
 {
     public class StateWalk : StateLocomotionBase
     {
+        protected override ITransition LocomotionAnim => _movement.AnimsetConfig.Walk;
+        protected override LocomotionAnimConfig LocomotionAnimConfig => _movement.AnimsetConfig.WalkConfig;
+
         public StateWalk(TPSAvatarController avatar) : base(avatar)
         {
         }
@@ -44,17 +47,8 @@ namespace NekoNeko.Avatar
         {
             base.OnUpdate(deltaTime);
 
-            _state.Speed = (_data.MovementConfig.WalkSpeed / GetMoveReferenceSpeed()) * _data.MoveSpeedMultiplier.Value;
-            _data.ForwardFoot = _movement.EvaluateFootCycle(_state.NormalizedTime, GetFootCycleConfig());
             _movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
-        }
-
-        protected override LocomotionAnimConfig GetLocomotionAnimConfig() => _movement.AnimationConfig.WalkConfig;
-
-        protected override ITransition GetLocomotionAnimation()
-        {
-            return _movement.AnimationConfig.Walk;
         }
 
         protected override float GetMoveSpeed()

@@ -6,7 +6,7 @@ using UnityEngine;
 namespace NekoNeko.Avatar
 {
     [CreateAssetMenu(menuName = "Avatar/Animation/Animation Config")]
-    public class AvatarAnimConfig : ScriptableObject
+    public class AvatarAnimsetConfig : ScriptableObject
     {
         [field: Header("Animations")]
         [field: SerializeField] public ClipTransitionAsset.UnShared Idle { get; private set; }

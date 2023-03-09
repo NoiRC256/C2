@@ -1,6 +1,5 @@
 using NekoLib;
 using NekoNeko;
-using System.IO;
 using UnityEngine;
 
 public class SettingsManager : MonoSingleton<SettingsManager>

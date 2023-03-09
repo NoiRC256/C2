@@ -18,7 +18,7 @@ namespace NekoNeko.Avatar
         [field: SerializeField] public MonoRootMotion RootMotion { get; private set; }
         [field: SerializeField] public float DefaultFacingSmoothDuration { get; set; } = 0.15f;
         [field: SerializeField] public float IdleToMoveMinExitTime { get; private set; } = 0.25f;
-        [field: SerializeField] public AvatarAnimConfig AnimationConfig { get; private set; }
+        [field: SerializeField] public AvatarAnimsetConfig AnimsetConfig { get; private set; }
 
         #endregion
 

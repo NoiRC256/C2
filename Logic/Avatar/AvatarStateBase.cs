@@ -48,11 +48,18 @@ namespace NekoNeko.Avatar
 
         }
 
+        /// <summary>
+        /// Evaluate transition conditions and calls state machine to initiate transitions.
+        /// </summary>
         public virtual void OnCheckTransitions()
         {
 
         }
 
+        /// <summary>
+        /// Update tick.
+        /// </summary>
+        /// <param name="deltaTime"></param>
         public virtual void OnUpdate(float deltaTime)
         {
 

@@ -20,11 +20,11 @@ namespace NekoNeko.Avatar
                 return;
             }
 
-            _movement.AnimationConfig.RunStartL.Events.OnEnd = End;
-            _movement.AnimationConfig.RunStartR.Events.OnEnd = End;
+            _movement.AnimsetConfig.RunStartL.Events.OnEnd = End;
+            _movement.AnimsetConfig.RunStartR.Events.OnEnd = End;
 
-            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_movement.AnimationConfig.RunStartL);
-            else _state = _avatar.Animancer.Play(_movement.AnimationConfig.RunStartR);
+            if (_data.ForwardFoot == 0f) _state = _avatar.Animancer.Play(_movement.AnimsetConfig.RunStartL);
+            else _state = _avatar.Animancer.Play(_movement.AnimsetConfig.RunStartR);
 
             _counter = 0f;
 
@@ -53,7 +53,7 @@ namespace NekoNeko.Avatar
                 return;
             }
 
-            if (_state.NormalizedTime >= _movement.AnimationConfig.RunStartMaxExitTime)
+            if (_state.NormalizedTime >= _movement.AnimsetConfig.RunStartMaxExitTime)
             {
                 _stateMachine.TrySetState(_avatar.StateRun);
             }
@@ -61,7 +61,7 @@ namespace NekoNeko.Avatar
 
         public override void OnUpdate(float deltaTime)
         {
-            _state.Speed = (_data.MovementConfig.RunSpeed / _movement.AnimationConfig.RunConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
+            _state.Speed = (_data.MovementConfig.RunSpeed / _movement.AnimsetConfig.RunConfig.ReferenceSpeed) * _data.MoveSpeedMultiplier.Value;
             _movement.RootMotionInputMove(_input.Move.ReadValue<Vector2>());
             _movement.FacingHandler.RotateTowards(_data.LastNonZeroInputDirection);
         }

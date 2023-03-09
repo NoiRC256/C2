@@ -13,7 +13,7 @@ namespace NekoNeko.Avatar
             _movement.InputMove(0f, Vector3.zero);
             _data.ForwardFoot = 1f;
 
-            _avatar.Animancer.Play(_movement.AnimationConfig.Idle);
+            _avatar.Animancer.Play(_movement.AnimsetConfig.Idle);
 
             _data.MovementState = AvatarData.MovementStateType.Idle;
         }
